@@ -1,1 +1,2 @@
 # armateur
+Exploration with pygame
