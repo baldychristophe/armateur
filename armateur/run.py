@@ -9,6 +9,11 @@ screen = pygame.display.set_mode(screen_size)
 pixel_size = 10
 
 
+class Octagon(pygame.sprite.Sprite):
+    pass
+
+
+
 def read_map():
     f = open('France_250_ASC_L93.OCEAN0.S.fdf')
     map = []
@@ -32,10 +37,12 @@ def draw_map(map, cursor_offset):
                 color = blue
             else:
                 color = green
-            pygame.draw.rect(screen, color, (int((j - cursor_offset[1]) * pixel_size), int((i - cursor_offset[0]) * pixel_size), pixel_size, pixel_size))
+            inside = pygame.draw.rect(screen, color, (int((j - cursor_offset[1]) * pixel_size), int((i - cursor_offset[0]) * pixel_size), pixel_size, pixel_size))
+            outside = pygame.draw.rect(screen, (0, 0, 0), inside, 1)
 
     screen.unlock()
     pygame.display.flip()
+    print('end draw')
 
 
 def main():
@@ -53,23 +60,23 @@ def main():
     while running:
         clock.tick(fps_limit)
         for event in pygame.event.get():
-            if event.type == pygame.QUIT or event.key == pygame.K_ESCAPE:
+            if event.type == pygame.QUIT or (event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE):
                 running = False
 
             if event.type == pygame.KEYUP and event.key == pygame.K_DOWN:
-                cursor_offset = (cursor_offset[0] + 50, cursor_offset[1])
+                cursor_offset = (cursor_offset[0] + 1, cursor_offset[1])
                 draw_map(map, cursor_offset)
 
             if event.type == pygame.KEYUP and event.key == pygame.K_UP:
-                cursor_offset = (cursor_offset[0] - 50, cursor_offset[1])
+                cursor_offset = (cursor_offset[0] - 1, cursor_offset[1])
                 draw_map(map, cursor_offset)
 
             if event.type == pygame.KEYUP and event.key == pygame.K_RIGHT:
-                cursor_offset = (cursor_offset[0], cursor_offset[1] + 50)
+                cursor_offset = (cursor_offset[0], cursor_offset[1] + 1)
                 draw_map(map, cursor_offset)
 
             if event.type == pygame.KEYUP and event.key == pygame.K_LEFT:
-                cursor_offset = (cursor_offset[0], cursor_offset[1] - 50)
+                cursor_offset = (cursor_offset[0], cursor_offset[1] - 1)
                 draw_map(map, cursor_offset)
 
 
