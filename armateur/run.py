@@ -6,7 +6,9 @@ import pygame
 screen_size = screen_width, screen_height = 1080, 1080
 screen = pygame.display.set_mode(screen_size)
 
-surface = pygame.Surface(screen_size)
+main_surface = pygame.Surface(screen_size)
+
+map_surface = pygame.Surface(screen_size)
 
 pixel_size = 20
 
@@ -30,7 +32,7 @@ class Hexagon(pygame.sprite.Sprite):
             point = (self.center + self.drawing_vector.rotate(i * 60))
             points.append(tuple(map(int, point)))
 
-        self.rect = pygame.draw.polygon(surface, self.color, points)
+        self.rect = pygame.draw.polygon(map_surface, self.color, points, 1)
 
 
 
@@ -45,16 +47,16 @@ def read_map():
 
 
 def draw_map(game_map, scroll_offset):
-    surface.fill(white)
-
     radius = 5
 
     cos_radius = math.cos(math.radians(30))
     sin_radius = math.sin(math.radians(30))
 
     hexs = []
-    for i in range(int(screen_width / (radius * math.sin(math.radians(30)) * 2))):
-        for j in range(int(screen_height / (radius * 2 * math.cos(math.radians(30))))):
+    # for i in range(int(screen_width / (radius * math.sin(math.radians(30)) * 2))):
+    for i in range(255):
+        for j in range(255):
+        # for j in range(int(screen_height / (radius * 2 * math.cos(math.radians(30))))):
             if int(game_map[i - scroll_offset[0]][j - scroll_offset[1]]) < 0:
                 color = blue
             else:
@@ -70,13 +72,22 @@ def draw_map(game_map, scroll_offset):
                 )
             )
 
+    main_surface.fill(white)
+    # temp = main_surface.subsurface(map_surface.get_rect())
+
     for hex in hexs:
         hex.display()
 
-    screen.blit(surface, (0, 0))
+    main_surface.blit(map_surface, (0, 0))
     pygame.display.flip()
 
-    # import sys; sys.exit()
+    screen.blit(main_surface, (0, 0))
+
+    # main_surface.subsurface(map_surface.get_rect())
+    # screen.subsurface(main_surface.get_rect())
+
+    pygame.display.flip()
+    # import ipdb; ipdb.set_trace()
 
 
 def main():
@@ -99,26 +110,22 @@ def main():
 
             if event.type == pygame.KEYUP and event.key == pygame.K_DOWN:
                 scroll_offset = (scroll_offset[0] - 1, scroll_offset[1])
-                # draw_map(map, scroll_offset)
                 screen.scroll(dy=-10)
-                pygame.display.update(screen.get_clip())
+                pygame.display.update(main_surface.get_clip())
 
             if event.type == pygame.KEYUP and event.key == pygame.K_UP:
                 scroll_offset = (scroll_offset[0] + 1, scroll_offset[1])
-                # draw_map(map, scroll_offset)
-                screen.scroll(dy=+10)
+                main_surface.scroll(dy=+10)
                 pygame.display.flip()
 
             if event.type == pygame.KEYUP and event.key == pygame.K_RIGHT:
                 scroll_offset = (scroll_offset[0], scroll_offset[1] - 1)
-                # draw_map(map, scroll_offset)
-                screen.scroll(dx=-10)
+                main_surface.scroll(dx=-10)
                 pygame.display.flip()
 
             if event.type == pygame.KEYUP and event.key == pygame.K_LEFT:
                 scroll_offset = (scroll_offset[0], scroll_offset[1] + 1)
-                # draw_map(map, scroll_offset)
-                screen.scroll(dx=+10)
+                main_surface.scroll(dx=+10)
                 pygame.display.flip()
 
 if __name__ == '__main__':
