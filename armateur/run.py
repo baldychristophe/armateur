@@ -101,7 +101,7 @@ def main():
                 scroll_offset = (scroll_offset[0] - 1, scroll_offset[1])
                 # draw_map(map, scroll_offset)
                 screen.scroll(dy=-10)
-                pygame.display.flip()
+                pygame.display.update(screen.get_clip())
 
             if event.type == pygame.KEYUP and event.key == pygame.K_UP:
                 scroll_offset = (scroll_offset[0] + 1, scroll_offset[1])
