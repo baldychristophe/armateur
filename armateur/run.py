@@ -6,10 +6,10 @@ import pygame
 screen_size = screen_width, screen_height = 800, 800
 screen = pygame.display.set_mode(screen_size)
 
-radius = 5
+radius = 9
 map_size = (
-    screen_width * 5 // 2,
-    screen_height * 5 // 2,
+    screen_width * radius // 2,
+    screen_height * radius // 2,
 )
 map_surface = pygame.Surface(map_size)
 
@@ -58,8 +58,8 @@ def draw_map(game_map, scroll_offset, pos=None):
     sin_radius = math.sin(math.radians(30))
 
     hexs = []
-    for i in range(255):
-        for j in range(255):
+    for i in range(len(game_map)):
+        for j in range(len(game_map)):
             if int(game_map[i - scroll_offset[0]][j - scroll_offset[1]]) < 0:
                 color = blue
             else:
@@ -86,6 +86,7 @@ def draw_map(game_map, scroll_offset, pos=None):
     return hexs
 
 def main():
+    global radius
     scroll_offset = (0, 0)
     scroll_factor = 20
 
@@ -96,7 +97,7 @@ def main():
     map = read_map()
     hexs = draw_map(map, scroll_offset)
 
-    pygame.event.set_allowed([pygame.MOUSEMOTION, pygame.KEYUP, pygame.QUIT])
+    pygame.event.set_allowed([pygame.KEYUP, pygame.QUIT, pygame.MOUSEBUTTONUP])
 
     running = True
     fps_limit = 20
@@ -108,7 +109,7 @@ def main():
             if event.type == pygame.QUIT or (event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE):
                 running = False
 
-            if event.type == pygame.KEYUP and event.key == pygame.K_DOWN and :
+            if event.type == pygame.KEYUP and event.key == pygame.K_DOWN:
                 scroll_offset = (scroll_offset[0], scroll_offset[1] - scroll_factor)
                 screen.scroll(dy=-scroll_factor)
                 screen.blit(map_surface, scroll_offset)
@@ -131,6 +132,10 @@ def main():
                 screen.scroll(dx=scroll_factor)
                 screen.blit(map_surface, scroll_offset)
                 pygame.display.flip()
+
+            elif event.type == pygame.MOUSEBUTTONUP and event.button == 5:
+                radius -= 1
+                hexs = draw_map(map, scroll_offset)
 
         mouse_pos = pygame.mouse.get_pos()
 
