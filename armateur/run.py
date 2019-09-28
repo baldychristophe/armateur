@@ -6,7 +6,7 @@ import pygame
 screen_size = screen_width, screen_height = 800, 800
 screen = pygame.display.set_mode(screen_size)
 
-radius = 9
+radius = 5
 map_size = (
     screen_width * radius // 2,
     screen_height * radius // 2,
@@ -39,7 +39,6 @@ class Hexagon(pygame.sprite.Sprite):
             points.append(tuple(map(int, point)))
 
         self.rect = pygame.draw.polygon(map_surface, color, points, 1)
-
 
 
 def read_map():
@@ -91,13 +90,14 @@ def main():
     scroll_factor = 20
 
     pygame.init()
-    pygame.mixer.quit()
+    pygame.mixer.quit()  # TODO fix high cpu usage (recompile pygame in local)
     pygame.display.set_caption("Armateur")
 
     map = read_map()
     hexs = draw_map(map, scroll_offset)
 
     pygame.event.set_allowed([pygame.KEYUP, pygame.QUIT, pygame.MOUSEBUTTONUP])
+    pygame.event.set_blocked(pygame.MOUSEMOTION)
 
     running = True
     fps_limit = 20
@@ -106,6 +106,7 @@ def main():
     while running:
         clock.tick(fps_limit)
         for event in pygame.event.get():
+            print(event)
             if event.type == pygame.QUIT or (event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE):
                 running = False
 
@@ -156,16 +157,16 @@ def main():
         screen.blit(map_surface, scroll_offset)
         pygame.display.flip()
 
-        scroll_margin = 70
-        if mouse_pos[0] < scroll_margin:
-            pygame.event.post(pygame.event.Event(pygame.KEYUP, {'key': pygame.K_LEFT}))
-        elif mouse_pos[0] > (screen_width - scroll_margin):
-            pygame.event.post(pygame.event.Event(pygame.KEYUP, {'key': pygame.K_RIGHT}))
-
-        if mouse_pos[1] < scroll_margin:
-            pygame.event.post(pygame.event.Event(pygame.KEYUP, {'key': pygame.K_UP}))
-        elif mouse_pos[1] > (screen_height - scroll_margin):
-            pygame.event.post(pygame.event.Event(pygame.KEYUP, {'key': pygame.K_DOWN}))
+        # scroll_margin = 70
+        # if mouse_pos[0] < scroll_margin:
+        #     pygame.event.post(pygame.event.Event(pygame.KEYUP, {'key': pygame.K_LEFT}))
+        # elif mouse_pos[0] > (screen_width - scroll_margin):
+        #     pygame.event.post(pygame.event.Event(pygame.KEYUP, {'key': pygame.K_RIGHT}))
+        #
+        # if mouse_pos[1] < scroll_margin:
+        #     pygame.event.post(pygame.event.Event(pygame.KEYUP, {'key': pygame.K_UP}))
+        # elif mouse_pos[1] > (screen_height - scroll_margin):
+        #     pygame.event.post(pygame.event.Event(pygame.KEYUP, {'key': pygame.K_DOWN}))
 
 
 if __name__ == '__main__':
