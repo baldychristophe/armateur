@@ -17,6 +17,7 @@ interface_surface = pygame.Surface((200, screen_height))
 blue = (0, 0, 255)
 green = (0, 255, 0)
 white = (255, 255, 255)
+grey = (98, 95, 107)
 
 
 class Hexagon(pygame.sprite.Sprite):
@@ -49,6 +50,7 @@ def read_map():
         cols = line.split(' ')
         raw_map.append(cols)
 
+
     return raw_map
 
 
@@ -76,12 +78,17 @@ def draw_map(game_map, scroll_offset):
             )
 
     map_surface.fill(white)
-    interface_surface.fill((0, 0, 0))
+    interface_surface.fill(grey)
 
     for hex in hexs:
         hex.display()
 
     screen.blit(map_surface, (0, 0))
+
+    temp = pygame.Surface((10, 10))
+    pygame.draw.ellipse(temp, white, (0, 0, 20, 20))
+    temp = pygame.transform.smoothscale(temp, (10, 10))  # Anti-aliasing
+    interface_surface.blit(temp, (50, 50))
     screen.blit(interface_surface, (0, 0))
 
     pygame.display.flip()
