@@ -8,10 +8,11 @@ screen = pygame.display.set_mode(screen_size)
 
 radius = 5
 map_size = (
-    screen_width * radius // 2,
-    screen_height * radius // 2,
+    255 * 5,
+    255 * 5,
 )
 map_surface = pygame.Surface(map_size)
+interface_surface = pygame.Surface((200, screen_height))
 
 blue = (0, 0, 255)
 green = (0, 255, 0)
@@ -43,15 +44,15 @@ class Hexagon(pygame.sprite.Sprite):
 
 def read_map():
     f = open('France_250_ASC_L93.OCEAN0.S.fdf')
-    map = []
+    raw_map = []
     for line in f:
         cols = line.split(' ')
-        map.append(cols)
+        raw_map.append(cols)
 
-    return map
+    return raw_map
 
 
-def draw_map(game_map, scroll_offset, pos=None):
+def draw_map(game_map, scroll_offset):
 
     cos_radius = math.cos(math.radians(30))
     sin_radius = math.sin(math.radians(30))
@@ -75,11 +76,13 @@ def draw_map(game_map, scroll_offset, pos=None):
             )
 
     map_surface.fill(white)
+    interface_surface.fill((0, 0, 0))
 
     for hex in hexs:
         hex.display()
 
     screen.blit(map_surface, (0, 0))
+    screen.blit(interface_surface, (0, 0))
 
     pygame.display.flip()
     return hexs
@@ -90,31 +93,46 @@ def main():
     scroll_factor = 20
 
     pygame.init()
-    pygame.mixer.quit()  # TODO fix high cpu usage (recompile pygame in local)
+    pygame.mixer.quit()  # TODO fix high cpu usage (recompile pygame in local or use pygame 2+)
     pygame.display.set_caption("Armateur")
 
-    map = read_map()
-    hexs = draw_map(map, scroll_offset)
-
-    pygame.event.set_allowed([pygame.KEYUP, pygame.QUIT, pygame.MOUSEBUTTONUP])
-    pygame.event.set_blocked(pygame.MOUSEMOTION)
+    raw_map = read_map()
+    hexs = draw_map(raw_map, scroll_offset)
 
     running = True
     fps_limit = 20
     clock = pygame.time.Clock()
     update_hex = None
+
+    view_rect = pygame.Rect(0, 0, screen_width, screen_height)
+    scroll_surface = screen.subsurface(pygame.Rect(200, 0, screen_width - 200, screen_height))
+
     while running:
         clock.tick(fps_limit)
         for event in pygame.event.get():
-            print(event)
             if event.type == pygame.QUIT or (event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE):
                 running = False
 
             if event.type == pygame.KEYUP and event.key == pygame.K_DOWN:
                 scroll_offset = (scroll_offset[0], scroll_offset[1] - scroll_factor)
-                screen.scroll(dy=-scroll_factor)
-                screen.blit(map_surface, scroll_offset)
-                pygame.display.flip()
+
+                scroll_surface.scroll(dy=-scroll_factor)
+
+                view_rect.move_ip(0, scroll_factor)
+
+                src_rect = view_rect.copy()
+                src_rect.h = scroll_factor
+                src_rect.bottom = view_rect.bottom
+
+                zoom_view_rect = screen.get_clip()
+                dst_rect = zoom_view_rect.copy()
+                dst_rect.h = scroll_factor
+                dst_rect.w = 600
+                dst_rect.bottomright = zoom_view_rect.bottomright
+
+                screen.subsurface(dst_rect).blit(map_surface.subsurface(src_rect), (0, 0))
+
+                pygame.display.update(zoom_view_rect)
 
             elif event.type == pygame.KEYUP and event.key == pygame.K_UP:
                 scroll_offset = (scroll_offset[0], scroll_offset[1] + scroll_factor)
@@ -136,26 +154,25 @@ def main():
 
             elif event.type == pygame.MOUSEBUTTONUP and event.button == 5:
                 radius -= 1
-                hexs = draw_map(map, scroll_offset)
+                hexs = draw_map(raw_map, scroll_offset)
 
         mouse_pos = pygame.mouse.get_pos()
-
         line = (mouse_pos[1] - scroll_offset[1]) // (radius + (math.sin(math.radians(30)) * radius))
         col = (mouse_pos[0] - scroll_offset[0] + ((line % 2) * math.sin(math.radians(30)) * radius)) // (2 * math.cos(math.radians(30)) * radius)
         highlight_hex = hexs[int(255 * line + col)]
 
-        if highlight_hex != update_hex:
-            highlight_hex.highlight = True
-            highlight_hex.display()
-
-            if update_hex:
-                update_hex.highlight = False
-                update_hex.display()
-
-            update_hex = highlight_hex
-
-        screen.blit(map_surface, scroll_offset)
-        pygame.display.flip()
+        # if highlight_hex != update_hex:
+        #     highlight_hex.highlight = True
+        #     highlight_hex.display()
+        #
+        #     if update_hex:
+        #         update_hex.highlight = False
+        #         update_hex.display()
+        #
+        #     update_hex = highlight_hex
+        #
+        #     screen.blit(map_surface, scroll_offset)
+        #     pygame.display.flip()
 
         # scroll_margin = 70
         # if mouse_pos[0] < scroll_margin:
