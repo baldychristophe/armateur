@@ -84,26 +84,6 @@ def draw_map(game_map, scroll_offset):
         hex.display()
 
     screen.blit(map_surface, (0, 0))
-
-    pygame.draw.rect(interface_surface, white, (55, 50, 50, 5))
-    pygame.draw.rect(interface_surface, white, (50, 55, 5, 50))
-
-    temp = pygame.Surface((10, 10), pygame.SRCALPHA)
-    temp.fill((0, 0, 0, 0))
-    pygame.draw.ellipse(temp, white, (0, 0, 20, 20))
-    temp = pygame.transform.smoothscale(temp, (5, 5))  # Anti-aliasing
-    interface_surface.blit(temp, (50, 50))
-
-    pygame.draw.rect(interface_surface, white, (55, 150, 50, 5))
-    pygame.draw.rect(interface_surface, white, (50, 155, 5, 50))
-
-    temp = pygame.Surface((50, 50), pygame.SRCALPHA)
-    temp.fill((0, 0, 0, 0))
-    pygame.draw.ellipse(temp, white, (0, 0, 100, 100))
-    temp = pygame.transform.smoothscale(temp, (5, 5))  # Anti-aliasing
-    interface_surface.blit(temp, (50, 150))
-
-
     screen.blit(interface_surface, (0, 0))
 
     pygame.display.flip()
