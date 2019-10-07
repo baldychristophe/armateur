@@ -77,37 +77,6 @@ class Display:
         # self.scroll_surface = screen.subsurface(pygame.Rect(200, 0, self.screen_width - 200, self.screen_height))
         self.scroll_surface = screen.subsurface(pygame.Rect(0, 0, self.screen_width, self.screen_height))
 
-    def draw_map_tiles(self):
-        for i in range(len(self.raw_map)):
-            for j in range(len(self.raw_map)):
-                if int(self.raw_map[i][j]) < 0:
-                    color = blue
-                else:
-                    color = green
-                self.tiles.append(
-                    Hexagon(
-                        (
-                            (j * 2 * self.cos_rad_30 * radius) + (((i + 1) % 2) * self.cos_rad_30 * self.radius),
-                            (i * (self.radius + (self.sin_rad_30 * self.radius))) + self.radius,
-                        ),
-                        self.radius,
-                        self.map_surface,
-                        color=color,
-                    )
-                )
-
-        self.map_surface.fill(white)
-        self.interface_surface.fill(grey)
-
-        for tile in self.tiles:
-            tile.display()
-
-        self.screen.blit(self.map_surface, (0, 0))  # Interface offset
-        # self.screen.blit(self.interface_surface, (0, 0))
-
-        pygame.display.flip()
-        return self.tiles
-
     def scroll(self, dx=0, dy=0):
         self.scroll_surface.scroll(dx=dx, dy=dy)
         self.view_rect.move_ip(-dx, -dy)
@@ -143,6 +112,37 @@ class Display:
         self.screen.subsurface(dst_rect).blit(self.map_surface.subsurface(src_rect), (0, 0))
 
         pygame.display.update(zoom_view_rect)
+
+    def draw_map_tiles(self):
+        for i in range(len(self.raw_map)):
+            for j in range(len(self.raw_map)):
+                if int(self.raw_map[i][j]) < 0:
+                    color = blue
+                else:
+                    color = green
+                self.tiles.append(
+                    Hexagon(
+                        (
+                            (j * 2 * self.cos_rad_30 * radius) + (((i + 1) % 2) * self.cos_rad_30 * self.radius),
+                            (i * (self.radius + (self.sin_rad_30 * self.radius))) + self.radius,
+                        ),
+                        self.radius,
+                        self.map_surface,
+                        color=color,
+                    )
+                )
+
+        self.map_surface.fill(white)
+        self.interface_surface.fill(grey)
+
+        for tile in self.tiles:
+            tile.display()
+
+        self.screen.blit(self.map_surface, (0, 0))  # Interface offset
+        # self.screen.blit(self.interface_surface, (0, 0))
+
+        pygame.display.flip()
+        return self.tiles
 
 
 class Client:
