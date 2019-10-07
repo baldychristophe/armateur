@@ -20,8 +20,18 @@ white = (255, 255, 255)
 grey = (98, 95, 107)
 
 
+def read_map():
+    f = open('France_250_ASC_L93.OCEAN0.S.fdf')
+    raw_map = []
+    for line in f:
+        cols = line.split(' ')
+        raw_map.append(cols)
+
+    return raw_map
+
+
 class Hexagon(pygame.sprite.Sprite):
-    def __init__(self, center, radius, surface, color=green):
+    def __init__(self, center, radius, surface, color):
         super().__init__()
         self.center = center
         self.radius = radius
@@ -31,9 +41,9 @@ class Hexagon(pygame.sprite.Sprite):
         self.highlight = False
         self.drawing_vector = pygame.math.Vector2(0, self.radius)
 
-    def display(self, color=None):
+    def display(self):
         points = []
-        color = color or self.color
+        color = self.color
         if self.highlight:
             color = pygame.Color('red')
 
@@ -44,39 +54,33 @@ class Hexagon(pygame.sprite.Sprite):
         self.rect = pygame.draw.polygon(self.surface, color, points, 1)
 
 
-def read_map():
-    f = open('France_250_ASC_L93.OCEAN0.S.fdf')
-    raw_map = []
-    for line in f:
-        cols = line.split(' ')
-        raw_map.append(cols)
-
-
-    return raw_map
-
-
 class Display:
     cos_rad_30 = math.cos(math.radians(30))
     sin_rad_30 = math.sin(math.radians(30))
 
-    def __init__(self):
+    def __init__(self, raw_map):
         self.screen_size = self.screen_width, self.screen_height = 800, 800
         self.screen = pygame.display.set_mode(self.screen_size)
         pygame.display.set_caption("Armateur")
 
+        self.raw_map = raw_map
         self.radius = 5
         self.map_size = (
-            255 * 5,
-            255 * 5,
+            255 * 10,
+            255 * 10,
         )
         self.map_surface = pygame.Surface(self.map_size)
         self.interface_surface = pygame.Surface((200, screen_height))
         self.tiles = []
 
-    def draw_map_tiles(self, raw_map):
-        for i in range(len(raw_map)):
-            for j in range(len(raw_map)):
-                if int(raw_map[i][j]) < 0:
+        self.view_rect = pygame.Rect(0, 0, self.screen_width, self.screen_height)
+        # self.scroll_surface = screen.subsurface(pygame.Rect(200, 0, self.screen_width - 200, self.screen_height))
+        self.scroll_surface = screen.subsurface(pygame.Rect(0, 0, self.screen_width, self.screen_height))
+
+    def draw_map_tiles(self):
+        for i in range(len(self.raw_map)):
+            for j in range(len(self.raw_map)):
+                if int(self.raw_map[i][j]) < 0:
                     color = blue
                 else:
                     color = green
@@ -98,11 +102,47 @@ class Display:
         for tile in self.tiles:
             tile.display()
 
-        self.screen.blit(self.map_surface, (0, 0))
-        self.screen.blit(self.interface_surface, (0, 0))
+        self.screen.blit(self.map_surface, (0, 0))  # Interface offset
+        # self.screen.blit(self.interface_surface, (0, 0))
 
         pygame.display.flip()
         return self.tiles
+
+    def scroll(self, dx=0, dy=0):
+        self.scroll_surface.scroll(dx=dx, dy=dy)
+        self.view_rect.move_ip(-dx, -dy)
+
+        src_rect = self.view_rect.copy()
+        zoom_view_rect = self.screen.get_clip()
+        dst_rect = zoom_view_rect.copy()
+
+        if dy != 0:
+            dst_rect.w = 800  # Interface : 600
+            src_rect.h = 20  # scroll_factor
+            dst_rect.h = 20  # scroll_factor
+
+            if dy < 0:
+                src_rect.bottom = self.view_rect.bottom
+                dst_rect.bottomright = zoom_view_rect.bottomright
+            else:
+                src_rect.top = self.view_rect.top
+                dst_rect.topright = zoom_view_rect.topright
+
+        if dx != 0:
+            dst_rect.h = 800
+            src_rect.w = 20  # scroll_factor
+            dst_rect.w = 20  # scroll_factor
+
+            if dx < 0:
+                src_rect.right = self.view_rect.right
+                dst_rect.bottomright = zoom_view_rect.bottomright
+            else:
+                src_rect.left = self.view_rect.left
+                dst_rect.topleft = zoom_view_rect.topleft
+
+        self.screen.subsurface(dst_rect).blit(self.map_surface.subsurface(src_rect), (0, 0))
+
+        pygame.display.update(zoom_view_rect)
 
 
 class Client:
@@ -113,8 +153,8 @@ class Client:
         self.running = True
 
         self.scroll_offset = (0, 0)
-        self.display = Display()
-        self.tiles = self.display.draw_map_tiles(raw_map)
+        self.display = Display(raw_map)
+        self.tiles = self.display.draw_map_tiles()
         self.clock = pygame.time.Clock()
         self.update_hex = None
 
@@ -130,42 +170,19 @@ class Client:
 
                 if event.type == pygame.KEYUP and event.key == pygame.K_DOWN:
                     self.scroll_offset = (self.scroll_offset[0], self.scroll_offset[1] - self.scroll_factor)
-
-                    scroll_surface.scroll(dy=-self.scroll_factor)
-
-                    view_rect.move_ip(0, self.scroll_factor)
-
-                    src_rect = view_rect.copy()
-                    src_rect.h = self.scroll_factor
-                    src_rect.bottom = view_rect.bottom
-
-                    zoom_view_rect = screen.get_clip()
-                    dst_rect = zoom_view_rect.copy()
-                    dst_rect.h = self.scroll_factor
-                    dst_rect.w = 600
-                    dst_rect.bottomright = zoom_view_rect.bottomright
-
-                    screen.subsurface(dst_rect).blit(map_surface.subsurface(src_rect), (0, 0))
-
-                    pygame.display.update(zoom_view_rect)
+                    self.display.scroll(dx=0, dy=-self.scroll_factor)
 
                 elif event.type == pygame.KEYUP and event.key == pygame.K_UP:
                     self.scroll_offset = (self.scroll_offset[0], self.scroll_offset[1] + self.scroll_factor)
-                    screen.scroll(dy=self.scroll_factor)
-                    screen.blit(map_surface, self.scroll_offset)
-                    pygame.display.flip()
+                    self.display.scroll(dx=0, dy=self.scroll_factor)
 
                 elif event.type == pygame.KEYUP and event.key == pygame.K_RIGHT:
                     self.scroll_offset = (self.scroll_offset[0] - self.scroll_factor, self.scroll_offset[1])
-                    screen.scroll(dx=-self.scroll_factor)
-                    screen.blit(map_surface, self.scroll_offset)
-                    pygame.display.flip()
+                    self.display.scroll(dx=-self.scroll_factor, dy=0)
 
                 elif event.type == pygame.KEYUP and event.key == pygame.K_LEFT:
                     self.scroll_offset = (self.scroll_offset[0] + self.scroll_factor, self.scroll_offset[1])
-                    screen.scroll(dx=self.scroll_factor)
-                    screen.blit(map_surface, self.scroll_offset)
-                    pygame.display.flip()
+                    self.display.scroll(dx=self.scroll_factor, dy=0)
 
                 # elif event.type == pygame.MOUSEBUTTONUP and event.button == 5:
                 #     radius -= 1
