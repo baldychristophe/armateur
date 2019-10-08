@@ -73,9 +73,8 @@ class Display:
         self.interface_surface = pygame.Surface((200, screen_height))
         self.tiles = []
 
-        self.view_rect = pygame.Rect(0, 0, self.screen_width, self.screen_height)
+        self.view_rect = pygame.Rect(0, 0, self.screen_width - 200, self.screen_height)
         self.scroll_surface = screen.subsurface(pygame.Rect(200, 0, self.screen_width - 200, self.screen_height))
-        # self.scroll_surface = screen.subsurface(pygame.Rect(0, 0, self.screen_width, self.screen_height))
 
     def scroll(self, dx=0, dy=0):
         self.scroll_surface.scroll(dx=dx, dy=dy)
@@ -86,32 +85,28 @@ class Display:
         dst_rect = zoom_view_rect.copy()
 
         if dy != 0:
-            # dst_rect.w = 600  # Interface : 600
-            src_rect.h = 20  # scroll_factor
-            dst_rect.h = 20  # scroll_factor
+            src_rect.h = dst_rect.h = abs(dy)  # scroll_factor
 
             if dy < 0:
                 src_rect.bottom = self.view_rect.bottom
-                dst_rect.bottomright = zoom_view_rect.bottomright
+                dst_rect.bottom = zoom_view_rect.bottom
             else:
                 src_rect.top = self.view_rect.top
-                dst_rect.topright = zoom_view_rect.topright
+                dst_rect.top = zoom_view_rect.top
 
         if dx != 0:
-            # dst_rect.h = 800
-            src_rect.w = 20  # scroll_factor
-            dst_rect.w = 20  # scroll_factor
+            src_rect.w = dst_rect.w = abs(dx)  # scroll_factor
 
             if dx < 0:
                 src_rect.right = self.view_rect.right
-                dst_rect.bottomright = zoom_view_rect.bottomright
+                dst_rect.right = zoom_view_rect.right
             else:
                 src_rect.left = self.view_rect.left
-                dst_rect.topleft = zoom_view_rect.topleft
+                dst_rect.left = zoom_view_rect.left
 
         self.scroll_surface.subsurface(dst_rect).blit(self.map_surface.subsurface(src_rect), (0, 0))
 
-        pygame.display.flip()
+        pygame.display.update(zoom_view_rect)
 
     def draw_map_tiles(self):
         for i in range(len(self.raw_map)):
