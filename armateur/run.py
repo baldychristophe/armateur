@@ -74,19 +74,19 @@ class Display:
         self.tiles = []
 
         self.view_rect = pygame.Rect(0, 0, self.screen_width, self.screen_height)
-        # self.scroll_surface = screen.subsurface(pygame.Rect(200, 0, self.screen_width - 200, self.screen_height))
-        self.scroll_surface = screen.subsurface(pygame.Rect(0, 0, self.screen_width, self.screen_height))
+        self.scroll_surface = screen.subsurface(pygame.Rect(200, 0, self.screen_width - 200, self.screen_height))
+        # self.scroll_surface = screen.subsurface(pygame.Rect(0, 0, self.screen_width, self.screen_height))
 
     def scroll(self, dx=0, dy=0):
         self.scroll_surface.scroll(dx=dx, dy=dy)
         self.view_rect.move_ip(-dx, -dy)
 
         src_rect = self.view_rect.copy()
-        zoom_view_rect = self.screen.get_clip()
+        zoom_view_rect = self.scroll_surface.get_clip()
         dst_rect = zoom_view_rect.copy()
 
         if dy != 0:
-            dst_rect.w = 800  # Interface : 600
+            # dst_rect.w = 600  # Interface : 600
             src_rect.h = 20  # scroll_factor
             dst_rect.h = 20  # scroll_factor
 
@@ -98,7 +98,7 @@ class Display:
                 dst_rect.topright = zoom_view_rect.topright
 
         if dx != 0:
-            dst_rect.h = 800
+            # dst_rect.h = 800
             src_rect.w = 20  # scroll_factor
             dst_rect.w = 20  # scroll_factor
 
@@ -109,9 +109,9 @@ class Display:
                 src_rect.left = self.view_rect.left
                 dst_rect.topleft = zoom_view_rect.topleft
 
-        self.screen.subsurface(dst_rect).blit(self.map_surface.subsurface(src_rect), (0, 0))
+        self.scroll_surface.subsurface(dst_rect).blit(self.map_surface.subsurface(src_rect), (0, 0))
 
-        pygame.display.update(zoom_view_rect)
+        pygame.display.flip()
 
     def draw_map_tiles(self):
         for i in range(len(self.raw_map)):
@@ -138,7 +138,7 @@ class Display:
         for tile in self.tiles:
             tile.display()
 
-        self.screen.blit(self.map_surface, (0, 0))  # Interface offset
+        self.scroll_surface.blit(self.map_surface, (0, 0))  # Interface offset
         # self.screen.blit(self.interface_surface, (0, 0))
 
         pygame.display.flip()
