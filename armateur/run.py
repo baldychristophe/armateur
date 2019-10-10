@@ -74,7 +74,8 @@ class Display:
         self.tiles = []
 
         self.view_rect = pygame.Rect(0, 0, self.screen_width - 200, self.screen_height)
-        self.scroll_surface = screen.subsurface(pygame.Rect(200, 0, self.screen_width - 200, self.screen_height))
+        self.master_surface = screen.subsurface(pygame.Rect(0, 0, self.screen_width, self.screen_height))
+        self.scroll_surface = self.master_surface.subsurface(pygame.Rect(200, 0, self.screen_width - 200, self.screen_height))
 
     def scroll(self, dx=0, dy=0):
         self.scroll_surface.scroll(dx=dx, dy=dy)
