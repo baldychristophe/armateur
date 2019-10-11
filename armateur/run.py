@@ -43,6 +43,12 @@ class Hexagon(pygame.sprite.Sprite):
         self.rect = pygame.draw.polygon(self.surface, color, points, 1)
 
 
+class StdSurface(pygame.sprite.Sprite):
+    def __init__(self, image):
+        super().__init__()
+        self.image = image
+        self.rect = self.image.get_rect()
+
 class Display:
     cos_rad_30 = math.cos(math.radians(30))
     sin_rad_30 = math.sin(math.radians(30))
@@ -55,16 +61,29 @@ class Display:
         self.raw_map = raw_map
         self.radius = 5
         self.map_size = (
-            255 * 10,
-            255 * 10,
+            len(raw_map) * self.radius * self.cos_rad_30 * 2,
+            # (len(raw_map) / 2) * self.radius * 2 + len(raw_map) / 2 * self.sin_rad_30 * self.radius * 2,
+            len(raw_map) * (self.radius + self.sin_rad_30 * self.radius),  # Factorized
         )
         self.map_surface = pygame.Surface(self.map_size)
-        self.interface_surface = pygame.Surface((200, self.screen_height))
+
         self.tiles = []
 
         self.master_surface = self.screen.subsurface(pygame.Rect(0, 0, self.screen_width, self.screen_height))
-        self.scroll_surface = self.master_surface.subsurface(pygame.Rect(0, 0, self.screen_width, self.screen_height))
+        # self.scroll_surface = self.master_surface.subsurface(pygame.Rect(0, 0, self.screen_width, self.screen_height))
+
+        self.scroll_surface = pygame.Surface(self.screen_size)
+
         self.view_rect = self.scroll_surface.get_rect()
+
+        self.interface_surface = pygame.Surface((480, 270))
+        self.interface_surface.fill(grey)
+
+        self.layers = pygame.sprite.LayeredUpdates()
+        self.layers.add(StdSurface(self.scroll_surface), layer=1)
+        # self.layers.add(StdSurface(self.scroll_surface), layer=2)
+        self.layers.add(StdSurface(self.interface_surface), layer=2)
+        self.layers.draw(self.master_surface)
 
         self.update_hex = None
 
@@ -105,9 +124,9 @@ class Display:
         self.scroll_surface.subsurface(dst_rect).blit(self.map_surface.subsurface(src_rect), (0, 0))
 
     def mouse_update(self, mouse_pos):
-        line = (mouse_pos[1] + self.view_rect.y) // (self.radius + (math.sin(math.radians(30)) * self.radius))
-        col = (mouse_pos[0] + self.view_rect.x + ((line % 2) * math.sin(math.radians(30)) * self.radius)) // (
-                    2 * math.cos(math.radians(30)) * self.radius)
+        line = (mouse_pos[1] + self.view_rect.y) // (self.radius + (self.sin_rad_30 * self.radius))
+        col = (mouse_pos[0] + self.view_rect.x + ((line % 2) * self.sin_rad_30 * self.radius)) // (
+                    2 * self.cos_rad_30 * self.radius)
         highlight_hex = self.tiles[int(255 * line + col)]
 
         if highlight_hex != self.update_hex:
@@ -142,7 +161,6 @@ class Display:
                 )
 
         self.map_surface.fill(white)
-        self.interface_surface.fill(grey)
 
         for tile in self.tiles:
             tile.display()
