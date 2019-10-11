@@ -106,8 +106,7 @@ class Display:
 
         pygame.display.flip()
 
-    def mouse_update(self):
-        mouse_pos = pygame.mouse.get_pos()
+    def mouse_update(self, mouse_pos):
         line = (mouse_pos[1] + self.view_rect.y) // (self.radius + (math.sin(math.radians(30)) * self.radius))
         col = (mouse_pos[0] + self.view_rect.x + ((line % 2) * math.sin(math.radians(30)) * self.radius)) // (
                     2 * math.cos(math.radians(30)) * self.radius)
@@ -164,7 +163,6 @@ class Client:
     def __init__(self, raw_map):
         self.running = True
 
-        self.scroll_offset = (0, 0)
         self.display = Display(raw_map)
         self.tiles = self.display.draw_map_tiles()
         self.clock = pygame.time.Clock()
@@ -178,26 +176,23 @@ class Client:
                     self.running = False
 
                 if event.type == pygame.KEYUP and event.key == pygame.K_DOWN:
-                    self.scroll_offset = (self.scroll_offset[0], self.scroll_offset[1] - self.scroll_factor)
                     self.display.scroll(dx=0, dy=-self.scroll_factor)
 
                 elif event.type == pygame.KEYUP and event.key == pygame.K_UP:
-                    self.scroll_offset = (self.scroll_offset[0], self.scroll_offset[1] + self.scroll_factor)
                     self.display.scroll(dx=0, dy=self.scroll_factor)
 
                 elif event.type == pygame.KEYUP and event.key == pygame.K_RIGHT:
-                    self.scroll_offset = (self.scroll_offset[0] - self.scroll_factor, self.scroll_offset[1])
                     self.display.scroll(dx=-self.scroll_factor, dy=0)
 
                 elif event.type == pygame.KEYUP and event.key == pygame.K_LEFT:
-                    self.scroll_offset = (self.scroll_offset[0] + self.scroll_factor, self.scroll_offset[1])
                     self.display.scroll(dx=self.scroll_factor, dy=0)
 
                 # elif event.type == pygame.MOUSEBUTTONUP and event.button == 5:
                 #     radius -= 1
                 #     hexs = draw_map(raw_map, scroll_offset)
 
-            self.display.mouse_update()
+            mouse_pos = pygame.mouse.get_pos()
+            self.display.mouse_update(mouse_pos)
 
             # scroll_margin = 70
             # if mouse_pos[0] < scroll_margin:
