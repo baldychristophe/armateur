@@ -104,8 +104,6 @@ class Display:
 
         self.scroll_surface.subsurface(dst_rect).blit(self.map_surface.subsurface(src_rect), (0, 0))
 
-        pygame.display.flip()
-
     def mouse_update(self, mouse_pos):
         line = (mouse_pos[1] + self.view_rect.y) // (self.radius + (math.sin(math.radians(30)) * self.radius))
         col = (mouse_pos[0] + self.view_rect.x + ((line % 2) * math.sin(math.radians(30)) * self.radius)) // (
@@ -123,7 +121,6 @@ class Display:
             self.update_hex = highlight_hex
 
             self.scroll_surface.blit(self.map_surface.subsurface(self.view_rect), (0, 0))
-            pygame.display.flip()
 
     def draw_map_tiles(self):
         for i in range(len(self.raw_map)):
@@ -193,6 +190,9 @@ class Client:
 
             mouse_pos = pygame.mouse.get_pos()
             self.display.mouse_update(mouse_pos)
+
+            # Update the screen once per frame
+            pygame.display.flip()
 
             # scroll_margin = 70
             # if mouse_pos[0] < scroll_margin:
