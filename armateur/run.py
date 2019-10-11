@@ -3,17 +3,6 @@ import math
 import pygame
 
 
-screen_size = screen_width, screen_height = 800, 800
-screen = pygame.display.set_mode(screen_size)
-
-radius = 5
-map_size = (
-    255 * 5,
-    255 * 5,
-)
-map_surface = pygame.Surface(map_size)
-interface_surface = pygame.Surface((200, screen_height))
-
 blue = (0, 0, 255)
 green = (0, 255, 0)
 white = (255, 255, 255)
@@ -59,7 +48,7 @@ class Display:
     sin_rad_30 = math.sin(math.radians(30))
 
     def __init__(self, raw_map):
-        self.screen_size = self.screen_width, self.screen_height = 800, 800
+        self.screen_size = self.screen_width, self.screen_height = 1600, 900
         self.screen = pygame.display.set_mode(self.screen_size)
         pygame.display.set_caption("Armateur")
 
@@ -70,14 +59,20 @@ class Display:
             255 * 10,
         )
         self.map_surface = pygame.Surface(self.map_size)
-        self.interface_surface = pygame.Surface((200, screen_height))
+        self.interface_surface = pygame.Surface((200, self.screen_height))
         self.tiles = []
 
-        self.view_rect = pygame.Rect(0, 0, self.screen_width - 200, self.screen_height)
-        self.master_surface = screen.subsurface(pygame.Rect(0, 0, self.screen_width, self.screen_height))
-        self.scroll_surface = self.master_surface.subsurface(pygame.Rect(200, 0, self.screen_width - 200, self.screen_height))
+        self.master_surface = self.screen.subsurface(pygame.Rect(0, 0, self.screen_width, self.screen_height))
+        self.scroll_surface = self.master_surface.subsurface(pygame.Rect(0, 0, self.screen_width, self.screen_height))
+        self.view_rect = self.scroll_surface.get_rect()
 
     def scroll(self, dx=0, dy=0):
+        if not self.view_rect.x - dx >= 0 or self.view_rect.x - dx + self.view_rect.w > self.map_surface.get_rect().w:
+            return
+
+        if not self.view_rect.y - dy >= 0 or self.view_rect.y - dy + self.view_rect.h > self.map_surface.get_rect().h:
+            return
+
         self.scroll_surface.scroll(dx=dx, dy=dy)
         self.view_rect.move_ip(-dx, -dy)
 
@@ -105,9 +100,20 @@ class Display:
                 src_rect.left = self.view_rect.left
                 dst_rect.left = zoom_view_rect.left
 
-        self.scroll_surface.subsurface(dst_rect).blit(self.map_surface.subsurface(src_rect), (0, 0))
+        try:
+            self.scroll_surface.subsurface(dst_rect).blit(self.map_surface.subsurface(src_rect), (0, 0))
+        except:
+            import ipdb; ipdb.set_trace()
+            raise
 
-        pygame.display.update(zoom_view_rect)
+        pygame.display.flip()
+
+    # def mouse_update(self):
+    #     mouse_pos = pygame.mouse.get_pos()
+    #     line = (mouse_pos[1] - self.scroll_offset[1]) // (self.radius + (math.sin(math.radians(30)) * self.radius))
+    #     col = (mouse_pos[0] - self.scroll_offset[0] + ((line % 2) * math.sin(math.radians(30)) * self.radius)) // (
+    #                 2 * math.cos(math.radians(30)) * self.radius)
+    #     highlight_hex = self.tiles[int(255 * line + col)]
 
     def draw_map_tiles(self):
         for i in range(len(self.raw_map)):
@@ -119,7 +125,7 @@ class Display:
                 self.tiles.append(
                     Hexagon(
                         (
-                            (j * 2 * self.cos_rad_30 * radius) + (((i + 1) % 2) * self.cos_rad_30 * self.radius),
+                            (j * 2 * self.cos_rad_30 * self.radius) + (((i + 1) % 2) * self.cos_rad_30 * self.radius),
                             (i * (self.radius + (self.sin_rad_30 * self.radius))) + self.radius,
                         ),
                         self.radius,
@@ -142,7 +148,7 @@ class Display:
 
 
 class Client:
-    scroll_factor = 20
+    scroll_factor = 80
     fps_limit = 20
 
     def __init__(self, raw_map):
@@ -155,9 +161,6 @@ class Client:
         self.update_hex = None
 
     def run(self):
-        view_rect = pygame.Rect(0, 0, screen_width, screen_height)
-        scroll_surface = screen.subsurface(pygame.Rect(200, 0, screen_width - 200, screen_height))
-
         while self.running:
             self.clock.tick(self.fps_limit)
             for event in pygame.event.get():
@@ -184,11 +187,13 @@ class Client:
                 #     radius -= 1
                 #     hexs = draw_map(raw_map, scroll_offset)
 
-            mouse_pos = pygame.mouse.get_pos()
-            line = (mouse_pos[1] - self.scroll_offset[1]) // (radius + (math.sin(math.radians(30)) * radius))
-            col = (mouse_pos[0] - self.scroll_offset[0] + ((line % 2) * math.sin(math.radians(30)) * radius)) // (
-                        2 * math.cos(math.radians(30)) * radius)
-            highlight_hex = self.tiles[int(255 * line + col)]
+            # self.display.mouse_update()
+
+            # mouse_pos = pygame.mouse.get_pos()
+            # line = (mouse_pos[1] - self.scroll_offset[1]) // (radius + (math.sin(math.radians(30)) * radius))
+            # col = (mouse_pos[0] - self.scroll_offset[0] + ((line % 2) * math.sin(math.radians(30)) * radius)) // (
+            #             2 * math.cos(math.radians(30)) * radius)
+            # highlight_hex = self.tiles[int(255 * line + col)]
 
             # if highlight_hex != update_hex:
             #     highlight_hex.highlight = True
