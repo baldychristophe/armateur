@@ -66,6 +66,8 @@ class Display:
         self.scroll_surface = self.master_surface.subsurface(pygame.Rect(0, 0, self.screen_width, self.screen_height))
         self.view_rect = self.scroll_surface.get_rect()
 
+        self.update_hex = None
+
     def scroll(self, dx=0, dy=0):
         if not self.view_rect.x - dx >= 0 or self.view_rect.x - dx + self.view_rect.w > self.map_surface.get_rect().w:
             return
@@ -100,20 +102,29 @@ class Display:
                 src_rect.left = self.view_rect.left
                 dst_rect.left = zoom_view_rect.left
 
-        try:
-            self.scroll_surface.subsurface(dst_rect).blit(self.map_surface.subsurface(src_rect), (0, 0))
-        except:
-            import ipdb; ipdb.set_trace()
-            raise
+        self.scroll_surface.subsurface(dst_rect).blit(self.map_surface.subsurface(src_rect), (0, 0))
 
         pygame.display.flip()
 
-    # def mouse_update(self):
-    #     mouse_pos = pygame.mouse.get_pos()
-    #     line = (mouse_pos[1] - self.scroll_offset[1]) // (self.radius + (math.sin(math.radians(30)) * self.radius))
-    #     col = (mouse_pos[0] - self.scroll_offset[0] + ((line % 2) * math.sin(math.radians(30)) * self.radius)) // (
-    #                 2 * math.cos(math.radians(30)) * self.radius)
-    #     highlight_hex = self.tiles[int(255 * line + col)]
+    def mouse_update(self):
+        mouse_pos = pygame.mouse.get_pos()
+        line = (mouse_pos[1] + self.view_rect.y) // (self.radius + (math.sin(math.radians(30)) * self.radius))
+        col = (mouse_pos[0] + self.view_rect.x + ((line % 2) * math.sin(math.radians(30)) * self.radius)) // (
+                    2 * math.cos(math.radians(30)) * self.radius)
+        highlight_hex = self.tiles[int(255 * line + col)]
+
+        if highlight_hex != self.update_hex:
+            highlight_hex.highlight = True
+            highlight_hex.display()
+
+            if self.update_hex:
+                self.update_hex.highlight = False
+                self.update_hex.display()
+
+            self.update_hex = highlight_hex
+
+            self.scroll_surface.blit(self.map_surface.subsurface(self.view_rect), (0, 0))
+            pygame.display.flip()
 
     def draw_map_tiles(self):
         for i in range(len(self.raw_map)):
@@ -141,7 +152,6 @@ class Display:
             tile.display()
 
         self.scroll_surface.blit(self.map_surface, (0, 0))  # Interface offset
-        # self.screen.blit(self.interface_surface, (0, 0))
 
         pygame.display.flip()
         return self.tiles
@@ -187,26 +197,7 @@ class Client:
                 #     radius -= 1
                 #     hexs = draw_map(raw_map, scroll_offset)
 
-            # self.display.mouse_update()
-
-            # mouse_pos = pygame.mouse.get_pos()
-            # line = (mouse_pos[1] - self.scroll_offset[1]) // (radius + (math.sin(math.radians(30)) * radius))
-            # col = (mouse_pos[0] - self.scroll_offset[0] + ((line % 2) * math.sin(math.radians(30)) * radius)) // (
-            #             2 * math.cos(math.radians(30)) * radius)
-            # highlight_hex = self.tiles[int(255 * line + col)]
-
-            # if highlight_hex != update_hex:
-            #     highlight_hex.highlight = True
-            #     highlight_hex.display()
-            #
-            #     if update_hex:
-            #         update_hex.highlight = False
-            #         update_hex.display()
-            #
-            #     update_hex = highlight_hex
-            #
-            #     screen.blit(map_surface, scroll_offset)
-            #     pygame.display.flip()
+            self.display.mouse_update()
 
             # scroll_margin = 70
             # if mouse_pos[0] < scroll_margin:
