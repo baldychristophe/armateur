@@ -44,10 +44,10 @@ class Hexagon(pygame.sprite.Sprite):
 
 
 class StdSurface(pygame.sprite.Sprite):
-    def __init__(self, image):
+    def __init__(self, image, rect=None):
         super().__init__()
         self.image = image
-        self.rect = self.image.get_rect()
+        self.rect = rect or self.image.get_rect()
 
 
 class Display:
@@ -74,15 +74,18 @@ class Display:
         # self.scroll_surface = self.master_surface.subsurface(pygame.Rect(0, 0, self.screen_width, self.screen_height))
 
         self.scroll_surface = pygame.Surface(self.screen_size)
-
         self.view_rect = self.scroll_surface.get_rect()
 
         self.interface_surface = pygame.Surface((480, 270))
+        self.interface_surface.set_alpha(200)
         self.interface_surface.fill(grey)
+        font = pygame.font.Font(None, 100)
+        surf = font.render('This is a test', True, pygame.Color('red'), grey)
+        self.interface_surface.blit(surf, (0, 0))
 
         self.layers = pygame.sprite.LayeredUpdates()
         self.layers.add(StdSurface(self.scroll_surface), layer=1)
-        self.layers.add(StdSurface(self.interface_surface), layer=2)
+        self.layers.add(StdSurface(self.interface_surface, pygame.Rect(660, 315, 480, 270)), layer=2)
 
         self.update_hex = None
 
