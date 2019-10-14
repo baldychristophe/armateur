@@ -49,6 +49,7 @@ class StdSurface(pygame.sprite.Sprite):
         self.image = image
         self.rect = self.image.get_rect()
 
+
 class Display:
     cos_rad_30 = math.cos(math.radians(30))
     sin_rad_30 = math.sin(math.radians(30))
@@ -63,7 +64,7 @@ class Display:
         self.map_size = (
             len(raw_map) * self.radius * self.cos_rad_30 * 2,
             # (len(raw_map) / 2) * self.radius * 2 + len(raw_map) / 2 * self.sin_rad_30 * self.radius * 2,
-            len(raw_map) * (self.radius + self.sin_rad_30 * self.radius),  # Factorized
+            len(raw_map) * (self.radius + self.sin_rad_30 * self.radius),  # Factorized from line above
         )
         self.map_surface = pygame.Surface(self.map_size)
 
@@ -81,11 +82,14 @@ class Display:
 
         self.layers = pygame.sprite.LayeredUpdates()
         self.layers.add(StdSurface(self.scroll_surface), layer=1)
-        # self.layers.add(StdSurface(self.scroll_surface), layer=2)
         self.layers.add(StdSurface(self.interface_surface), layer=2)
-        self.layers.draw(self.master_surface)
 
         self.update_hex = None
+
+    def flip(self):
+        self.layers.draw(self.master_surface)
+
+        pygame.display.flip()
 
     def scroll(self, dx=0, dy=0):
         if not self.view_rect.x - dx >= 0 or self.view_rect.x - dx + self.view_rect.w > self.map_surface.get_rect().w:
@@ -210,7 +214,7 @@ class Client:
             self.display.mouse_update(mouse_pos)
 
             # Update the screen once per frame
-            pygame.display.flip()
+            self.display.flip()
 
             # scroll_margin = 70
             # if mouse_pos[0] < scroll_margin:
