@@ -74,14 +74,25 @@ class Display:
         # self.scroll_surface = self.master_surface.subsurface(pygame.Rect(0, 0, self.screen_width, self.screen_height))
 
         self.scroll_surface = pygame.Surface(self.screen_size)
-        self.view_rect = self.scroll_surface.get_rect()
+        self.view_rect = pygame.Rect(0, 0, self.screen_width, self.screen_height)
 
         self.interface_surface = pygame.Surface((480, 270))
         self.interface_surface.set_alpha(200)
         self.interface_surface.fill(grey)
+
         font = pygame.font.Font(None, 100)
         surf = font.render('This is a test', True, pygame.Color('red'), grey)
-        self.interface_surface.blit(surf, (0, 0))
+
+        button_surface = pygame.Surface((50, 20))
+        button_surface.fill(pygame.Color('red'))
+
+        self.interface_group = pygame.sprite.LayeredUpdates()
+
+        self.interface_group.add(StdSurface(surf))
+        self.interface_group.add(StdSurface(button_surface, pygame.Rect(420, 240, 50, 20)))
+        self.interface_group.draw(self.interface_surface)
+
+        self.tsurf = pygame.Surface((1, 1))
 
         self.layers = pygame.sprite.LayeredUpdates()
         self.layers.add(StdSurface(self.scroll_surface), layer=1)
@@ -93,6 +104,13 @@ class Display:
         self.layers.draw(self.master_surface)
 
         pygame.display.flip()
+
+    def mouse_clic(self, event):
+        pos_sprite = pygame.sprite.Sprite()
+        pos_sprite.rect = pygame.Rect(event.pos[0], event.pos[1], 1, 1)
+
+        collided_layer = pygame.sprite.spritecollide(pos_sprite, self.layers, False)
+        print(collided_layer)
 
     def scroll(self, dx=0, dy=0):
         if not self.view_rect.x - dx >= 0 or self.view_rect.x - dx + self.view_rect.w > self.map_surface.get_rect().w:
@@ -193,6 +211,7 @@ class Client:
     def run(self):
         while self.running:
             self.clock.tick(self.fps_limit)
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT or (event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE):
                     self.running = False
@@ -208,6 +227,9 @@ class Client:
 
                 elif event.type == pygame.KEYUP and event.key == pygame.K_LEFT:
                     self.display.scroll(dx=self.scroll_factor, dy=0)
+
+                elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                    self.display.mouse_clic(event)
 
                 # elif event.type == pygame.MOUSEBUTTONUP and event.button == 5:
                 #     radius -= 1
