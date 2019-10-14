@@ -71,7 +71,6 @@ class Display:
         self.tiles = []
 
         self.master_surface = self.screen.subsurface(pygame.Rect(0, 0, self.screen_width, self.screen_height))
-        # self.scroll_surface = self.master_surface.subsurface(pygame.Rect(0, 0, self.screen_width, self.screen_height))
 
         self.scroll_surface = pygame.Surface(self.screen_size)
         self.view_rect = pygame.Rect(0, 0, self.screen_width, self.screen_height)
@@ -91,8 +90,6 @@ class Display:
         self.interface_group.add(StdSurface(surf))
         self.interface_group.add(StdSurface(button_surface, pygame.Rect(420, 240, 50, 20)))
         self.interface_group.draw(self.interface_surface)
-
-        self.tsurf = pygame.Surface((1, 1))
 
         self.layers = pygame.sprite.LayeredUpdates()
         self.layers.add(StdSurface(self.scroll_surface), layer=1)
