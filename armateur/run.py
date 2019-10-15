@@ -36,7 +36,8 @@ class Hexagon(pygame.sprite.Sprite):
         self.draw()
 
     def draw(self):
-        self.image.fill(pygame.Color('white'))
+        self.image.set_colorkey((50, 50, 50))
+        self.image.fill((50, 50, 50))
 
         color = self.color
         if self.highlight:
@@ -52,7 +53,8 @@ class Hexagon(pygame.sprite.Sprite):
             (w - 1, (self.radius * sin_rad_30)),
             (w - 1, h - (self.radius * sin_rad_30)),
         ]
-        pygame.draw.polygon(self.image, color, points, 1)
+        pygame.draw.polygon(self.image, pygame.Color('white'), points)  # inside
+        pygame.draw.polygon(self.image, color, points, 1)  # outside
 
 
 class StdSurface(pygame.sprite.Sprite):
