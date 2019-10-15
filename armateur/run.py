@@ -8,6 +8,9 @@ green = (0, 255, 0)
 white = (255, 255, 255)
 grey = (98, 95, 107)
 
+cos_rad_30 = math.cos(math.radians(30))
+sin_rad_30 = math.sin(math.radians(30))
+
 
 def read_map():
     f = open('France_250_ASC_L93.OCEAN0.S.fdf')
@@ -20,27 +23,36 @@ def read_map():
 
 
 class Hexagon(pygame.sprite.Sprite):
-    def __init__(self, center, radius, surface, color):
+    def __init__(self, rect, radius, color):
         super().__init__()
-        self.center = center
+        self.rect = rect
         self.radius = radius
-        self.surface = surface
         self.color = color
-        self.rect = None
         self.highlight = False
-        self.drawing_vector = pygame.math.Vector2(0, self.radius)
+        self.image = pygame.Surface((
+            round(self.radius * cos_rad_30 * 2) + 1,
+            round(self.radius * 2) + 1,
+        ))
+        self.draw()
 
-    def display(self):
-        points = []
+    def draw(self):
+        self.image.fill(pygame.Color('white'))
+
         color = self.color
         if self.highlight:
             color = pygame.Color('red')
 
-        for i in range(6):
-            point = (self.center + self.drawing_vector.rotate(i * 60))
-            points.append(tuple(map(int, point)))
-
-        self.rect = pygame.draw.polygon(self.surface, color, points, 1)
+        w = self.image.get_width()
+        h = self.image.get_height()
+        points = [
+            (w // 2, h - 1),
+            (0, h - (self.radius * sin_rad_30)),
+            (0, (self.radius * sin_rad_30)),
+            (w // 2, 0),
+            (w - 1, (self.radius * sin_rad_30)),
+            (w - 1, h - (self.radius * sin_rad_30)),
+        ]
+        pygame.draw.polygon(self.image, color, points, 1)
 
 
 class StdSurface(pygame.sprite.Sprite):
@@ -68,7 +80,7 @@ class Display:
         )
         self.map_surface = pygame.Surface(self.map_size)
 
-        self.tiles = []
+        self.tiles = pygame.sprite.Group()
 
         self.master_surface = self.screen.subsurface(pygame.Rect(0, 0, self.screen_width, self.screen_height))
 
@@ -170,24 +182,26 @@ class Display:
                     color = blue
                 else:
                     color = green
-                self.tiles.append(
+                self.tiles.add(
                     Hexagon(
                         (
                             (j * 2 * self.cos_rad_30 * self.radius) + (((i + 1) % 2) * self.cos_rad_30 * self.radius),
                             (i * (self.radius + (self.sin_rad_30 * self.radius))) + self.radius,
                         ),
                         self.radius,
-                        self.map_surface,
                         color=color,
                     )
                 )
 
         self.map_surface.fill(white)
 
-        for tile in self.tiles:
-            tile.display()
+        # self.map_surface.blit(self.tiles.sprites()[0].image, (20, 20))
+        self.tiles.draw(self.scroll_surface)
 
-        self.scroll_surface.blit(self.map_surface, (0, 0))  # Interface offset
+        # for tile in self.tiles:
+        #     tile.display()
+
+        # self.scroll_surface.blit(self.map_surface, (0, 0))  # Interface offset
 
         pygame.display.flip()
         return self.tiles
@@ -233,7 +247,7 @@ class Client:
                 #     hexs = draw_map(raw_map, scroll_offset)
 
             mouse_pos = pygame.mouse.get_pos()
-            self.display.mouse_update(mouse_pos)
+            # self.display.mouse_update(mouse_pos)
 
             # Update the screen once per frame
             self.display.flip()
