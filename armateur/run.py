@@ -56,6 +56,10 @@ class Hexagon(pygame.sprite.Sprite):
         pygame.draw.polygon(self.image, pygame.Color('white'), points)  # inside
         pygame.draw.polygon(self.image, color, points, 1)  # outside
 
+    def update(self, surface):
+        self.draw()
+        surface.blit(self.image, self.rect)
+
 
 class StdSurface(pygame.sprite.Sprite):
     def __init__(self, image, rect=None):
@@ -75,20 +79,19 @@ class Display:
 
         self.raw_map = raw_map
         self.radius = 5
-        self.map_size = (
+        self.map_size = self.map_width, self.map_height = (
             len(raw_map) * self.radius * self.cos_rad_30 * 2,
             # (len(raw_map) / 2) * self.radius * 2 + len(raw_map) / 2 * self.sin_rad_30 * self.radius * 2,
             len(raw_map) * (self.radius + self.sin_rad_30 * self.radius),  # Factorized from line above
         )
         self.map_surface = pygame.Surface(self.map_size)
 
-        self.tiles = pygame.sprite.Group()
+        self.tiles = pygame.sprite.OrderedUpdates()
 
         self.master_surface = self.screen.subsurface(pygame.Rect(0, 0, self.screen_width, self.screen_height))
 
         self.view_rect = pygame.Rect(0, 0, self.screen_width, self.screen_height)
 
-        # self.scroll_surface = pygame.Surface(self.screen_size)
         self.scroll_surface = StdSurface(pygame.Surface(self.map_size), rect=self.view_rect)
 
         self.interface_surface = pygame.Surface((480, 270))
@@ -108,11 +111,11 @@ class Display:
         self.interface_group.draw(self.interface_surface)
 
         self.layers = pygame.sprite.LayeredUpdates()
-        # self.layers.add(StdSurface(self.scroll_surface), layer=1)
         self.layers.add(self.scroll_surface, layer=1)
         self.layers.add(StdSurface(self.interface_surface, pygame.Rect(660, 315, 480, 270)), layer=2)
 
         self.update_hex = None
+        self.draw_map_tiles()
 
     def flip(self):
         self.layers.draw(self.master_surface)
@@ -127,32 +130,30 @@ class Display:
         print(collided_layer)
 
     def scroll(self, dx=0, dy=0):
-        if not self.view_rect.x + dx <= 0 or self.view_rect.w - (self.view_rect.x + dx) > self.map_surface.get_rect().w:
+        if not self.view_rect.x + dx <= 0 or self.view_rect.w - (self.view_rect.x + dx) > self.map_width:
             return
 
-        if not self.view_rect.y + dy <= 0 or self.view_rect.h - (self.view_rect.y + dy) > self.map_surface.get_rect().h:
+        if not self.view_rect.y + dy <= 0 or self.view_rect.h - (self.view_rect.y + dy) > self.map_height:
             return
 
         # self.scroll_surface.image.scroll(dx=dx, dy=dy)
         self.scroll_surface.rect.move_ip(dx, dy)
 
     def mouse_update(self, mouse_pos):
-        line = (mouse_pos[1] + self.view_rect.y) // (self.radius + (self.sin_rad_30 * self.radius))
-        col = (mouse_pos[0] + self.view_rect.x + ((line % 2) * self.sin_rad_30 * self.radius)) // (
+        line = (mouse_pos[1] - self.view_rect.y) // (self.radius + (self.sin_rad_30 * self.radius))
+        col = (mouse_pos[0] - self.view_rect.x + ((line % 2) * self.sin_rad_30 * self.radius)) // (
                     2 * self.cos_rad_30 * self.radius)
-        highlight_hex = self.tiles[int(255 * line + col)]
+        highlight_hex = self.tiles.sprites()[int(255 * line + col)]
 
         if highlight_hex != self.update_hex:
             highlight_hex.highlight = True
-            highlight_hex.display()
+            highlight_hex.update(self.scroll_surface.image)
 
             if self.update_hex:
                 self.update_hex.highlight = False
-                self.update_hex.display()
+                self.update_hex.update(self.scroll_surface.image)
 
             self.update_hex = highlight_hex
-
-            self.scroll_surface.blit(self.map_surface.subsurface(self.view_rect), (0, 0))
 
     def draw_map_tiles(self):
         for i in range(len(self.raw_map)):
@@ -171,30 +172,17 @@ class Display:
                         color=color,
                     )
                 )
-
-        self.map_surface.fill(white)
-
-        # self.tiles.draw(self.scroll_surface)
         self.tiles.draw(self.scroll_surface.image)
-
-        # for tile in self.tiles:
-        #     tile.display()
-
-        # self.scroll_surface.blit(self.map_surface, (0, 0))  # Interface offset
-
-        pygame.display.flip()
-        return self.tiles
 
 
 class Client:
-    scroll_factor = 80
+    scroll_factor = 20
     fps_limit = 20
 
     def __init__(self, raw_map):
         self.running = True
 
         self.display = Display(raw_map)
-        self.tiles = self.display.draw_map_tiles()
         self.clock = pygame.time.Clock()
         self.update_hex = None
 
