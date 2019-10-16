@@ -23,16 +23,14 @@ def read_map():
 
 
 class Hexagon(pygame.sprite.Sprite):
-    def __init__(self, rect, radius, color):
+    def __init__(self, pos, radius, color):
         super().__init__()
-        self.rect = rect
         self.radius = radius
+        self.size = self.width, self.height = (round(self.radius * cos_rad_30 * 2) + 1, round(self.radius * 2) + 1)
+        self.rect = pygame.Rect(pos[0], pos[1], self.width, self.height)
         self.color = color
         self.highlight = False
-        self.image = pygame.Surface((
-            round(self.radius * cos_rad_30 * 2) + 1,
-            round(self.radius * 2) + 1,
-        ))
+        self.image = pygame.Surface(self.size)
         self.draw()
 
     def draw(self):
@@ -84,9 +82,8 @@ class Display:
             # (len(raw_map) / 2) * self.radius * 2 + len(raw_map) / 2 * self.sin_rad_30 * self.radius * 2,
             len(raw_map) * (self.radius + self.sin_rad_30 * self.radius),  # Factorized from line above
         )
-        self.map_surface = pygame.Surface(self.map_size)
-
         self.tiles = pygame.sprite.OrderedUpdates()
+        self.sprites = None
 
         self.master_surface = self.screen.subsurface(pygame.Rect(0, 0, self.screen_width, self.screen_height))
 
@@ -143,9 +140,9 @@ class Display:
         line = (mouse_pos[1] - self.view_rect.y) // (self.radius + (self.sin_rad_30 * self.radius))
         col = (mouse_pos[0] - self.view_rect.x + ((line % 2) * self.sin_rad_30 * self.radius)) // (
                     2 * self.cos_rad_30 * self.radius)
-        highlight_hex = self.tiles.sprites()[int(255 * line + col)]
+        highlight_hex = self.sprites[int(255 * line + col)]
 
-        if highlight_hex != self.update_hex:
+        if highlight_hex and highlight_hex != self.update_hex:
             highlight_hex.highlight = True
             highlight_hex.update(self.scroll_surface.image)
 
@@ -173,6 +170,7 @@ class Display:
                     )
                 )
         self.tiles.draw(self.scroll_surface.image)
+        self.sprites = self.tiles.sprites()
 
 
 class Client:
@@ -214,7 +212,7 @@ class Client:
                 #     hexs = draw_map(raw_map, scroll_offset)
 
             mouse_pos = pygame.mouse.get_pos()
-            # self.display.mouse_update(mouse_pos)
+            self.display.mouse_update(mouse_pos)
 
             # Update the screen once per frame
             self.display.flip()
