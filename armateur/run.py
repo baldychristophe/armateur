@@ -86,8 +86,10 @@ class Display:
 
         self.master_surface = self.screen.subsurface(pygame.Rect(0, 0, self.screen_width, self.screen_height))
 
-        self.scroll_surface = pygame.Surface(self.screen_size)
         self.view_rect = pygame.Rect(0, 0, self.screen_width, self.screen_height)
+
+        # self.scroll_surface = pygame.Surface(self.screen_size)
+        self.scroll_surface = StdSurface(pygame.Surface(self.map_size), rect=self.view_rect)
 
         self.interface_surface = pygame.Surface((480, 270))
         self.interface_surface.set_alpha(200)
@@ -106,7 +108,8 @@ class Display:
         self.interface_group.draw(self.interface_surface)
 
         self.layers = pygame.sprite.LayeredUpdates()
-        self.layers.add(StdSurface(self.scroll_surface), layer=1)
+        # self.layers.add(StdSurface(self.scroll_surface), layer=1)
+        self.layers.add(self.scroll_surface, layer=1)
         self.layers.add(StdSurface(self.interface_surface, pygame.Rect(660, 315, 480, 270)), layer=2)
 
         self.update_hex = None
@@ -124,40 +127,14 @@ class Display:
         print(collided_layer)
 
     def scroll(self, dx=0, dy=0):
-        if not self.view_rect.x - dx >= 0 or self.view_rect.x - dx + self.view_rect.w > self.map_surface.get_rect().w:
+        if not self.view_rect.x + dx <= 0 or self.view_rect.w - (self.view_rect.x + dx) > self.map_surface.get_rect().w:
             return
 
-        if not self.view_rect.y - dy >= 0 or self.view_rect.y - dy + self.view_rect.h > self.map_surface.get_rect().h:
+        if not self.view_rect.y + dy <= 0 or self.view_rect.h - (self.view_rect.y + dy) > self.map_surface.get_rect().h:
             return
 
-        self.scroll_surface.scroll(dx=dx, dy=dy)
-        self.view_rect.move_ip(-dx, -dy)
-
-        src_rect = self.view_rect.copy()
-        zoom_view_rect = self.scroll_surface.get_clip()
-        dst_rect = zoom_view_rect.copy()
-
-        if dy != 0:
-            src_rect.h = dst_rect.h = abs(dy)  # scroll_factor
-
-            if dy < 0:
-                src_rect.bottom = self.view_rect.bottom
-                dst_rect.bottom = zoom_view_rect.bottom
-            else:
-                src_rect.top = self.view_rect.top
-                dst_rect.top = zoom_view_rect.top
-
-        if dx != 0:
-            src_rect.w = dst_rect.w = abs(dx)  # scroll_factor
-
-            if dx < 0:
-                src_rect.right = self.view_rect.right
-                dst_rect.right = zoom_view_rect.right
-            else:
-                src_rect.left = self.view_rect.left
-                dst_rect.left = zoom_view_rect.left
-
-        self.scroll_surface.subsurface(dst_rect).blit(self.map_surface.subsurface(src_rect), (0, 0))
+        # self.scroll_surface.image.scroll(dx=dx, dy=dy)
+        self.scroll_surface.rect.move_ip(dx, dy)
 
     def mouse_update(self, mouse_pos):
         line = (mouse_pos[1] + self.view_rect.y) // (self.radius + (self.sin_rad_30 * self.radius))
@@ -197,8 +174,8 @@ class Display:
 
         self.map_surface.fill(white)
 
-        # self.map_surface.blit(self.tiles.sprites()[0].image, (20, 20))
-        self.tiles.draw(self.scroll_surface)
+        # self.tiles.draw(self.scroll_surface)
+        self.tiles.draw(self.scroll_surface.image)
 
         # for tile in self.tiles:
         #     tile.display()
