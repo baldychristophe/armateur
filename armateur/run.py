@@ -91,40 +91,47 @@ class Display:
 
         self.scroll_surface = StdSurface(pygame.Surface(self.map_size), rect=self.view_rect)
 
-        self.interface_surface = pygame.Surface((480, 270))
-        self.interface_surface.set_alpha(200)
-        self.interface_surface.fill(grey)
-
-        font = pygame.font.Font(None, 100)
-        surf = font.render('This is a test', True, pygame.Color('red'), grey)
-
-        button_surface = pygame.Surface((50, 20))
-        button_surface.fill(pygame.Color('red'))
-
-        self.interface_group = pygame.sprite.LayeredUpdates()
-
-        self.interface_group.add(StdSurface(surf))
-        self.interface_group.add(StdSurface(button_surface, pygame.Rect(420, 240, 50, 20)))
-        self.interface_group.draw(self.interface_surface)
+        # self.interface_surface = pygame.Surface((480, 270))
+        # self.interface_surface.set_alpha(200)
+        # self.interface_surface.fill(grey)
+        #
+        # font = pygame.font.Font(None, 100)
+        # surf = font.render('This is a test', True, pygame.Color('red'), grey)
+        #
+        # button_surface = pygame.Surface((50, 20))
+        # button_surface.fill(pygame.Color('red'))
+        #
+        # self.interface_group = pygame.sprite.LayeredUpdates()
+        #
+        # self.interface_group.add(StdSurface(surf))
+        # self.interface_group.add(StdSurface(button_surface, pygame.Rect(420, 240, 50, 20)))
+        # self.interface_group.draw(self.interface_surface)
 
         self.layers = pygame.sprite.LayeredUpdates()
         self.layers.add(self.scroll_surface, layer=1)
-        self.layers.add(StdSurface(self.interface_surface, pygame.Rect(660, 315, 480, 270)), layer=2)
+        # self.layers.add(StdSurface(self.interface_surface, pygame.Rect(660, 315, 480, 270)), layer=2)
 
         self.update_hex = None
         self.draw_map_tiles()
 
     def flip(self):
         self.layers.draw(self.master_surface)
-
         pygame.display.flip()
 
     def mouse_clic(self, event):
-        pos_sprite = pygame.sprite.Sprite()
-        pos_sprite.rect = pygame.Rect(event.pos[0], event.pos[1], 1, 1)
+        mouse_pos = event.pos
 
-        collided_layer = pygame.sprite.spritecollide(pos_sprite, self.layers, False)
-        print(collided_layer)
+        line = (mouse_pos[1] - self.view_rect.y - self.radius) / (self.radius + (self.sin_rad_30 * self.radius))
+        col = (mouse_pos[0] - self.view_rect.x + ((line % 2) * self.sin_rad_30 * self.radius) - (
+                    self.radius * self.cos_rad_30)) / (
+                      2 * self.cos_rad_30 * self.radius)
+        clicked_hex = self.sprites[round(255 * round(line) + round(col))]
+        if clicked_hex.color == blue:
+            clicked_hex.color = green
+        else:
+            clicked_hex.color = blue
+        clicked_hex.update(self.scroll_surface.image)
+
 
     def scroll(self, dx=0, dy=0):
         if not self.view_rect.x + dx <= 0 or self.view_rect.w - (self.view_rect.x + dx) > self.map_width:
@@ -137,10 +144,10 @@ class Display:
         self.scroll_surface.rect.move_ip(dx, dy)
 
     def mouse_update(self, mouse_pos):
-        line = (mouse_pos[1] - self.view_rect.y) // (self.radius + (self.sin_rad_30 * self.radius))
-        col = (mouse_pos[0] - self.view_rect.x + ((line % 2) * self.sin_rad_30 * self.radius)) // (
+        line = (mouse_pos[1] - self.view_rect.y - self.radius) / (self.radius + (self.sin_rad_30 * self.radius))
+        col = (mouse_pos[0] - self.view_rect.x + ((line % 2) * self.sin_rad_30 * self.radius) - (self.radius * self.cos_rad_30)) / (
                     2 * self.cos_rad_30 * self.radius)
-        highlight_hex = self.sprites[int(255 * line + col)]
+        highlight_hex = self.sprites[round(255 * round(line) + round(col))]
 
         if highlight_hex and highlight_hex != self.update_hex:
             highlight_hex.highlight = True
