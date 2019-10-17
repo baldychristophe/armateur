@@ -25,27 +25,13 @@ def read_map():
 class Hexagon(pygame.sprite.Sprite):
     def __init__(self, pos, radius, color):
         super().__init__()
-        self.pos = pos
-        self.scale = 1
         self.radius = radius
-
-        self._scale_size(1)
-
+        self.size = self.width, self.height = (round(self.radius * cos_rad_30 * 2) + 1, round(self.radius * 2) + 1)
+        self.rect = pygame.Rect(pos[0], pos[1], self.width, self.height)
         self.color = color
         self.highlight = False
         self.image = pygame.Surface(self.size)
         self.draw()
-
-    def _scale_size(self, scale):
-        self.scale = scale
-        self.radius = self.scale * self.radius
-        self.size = self.width, self.height = (round(self.radius * cos_rad_30 * 2) + 1, round(self.radius * 2) + 1)
-        self.rect = pygame.Rect(
-            (self.pos[1] * 2 * cos_rad_30 * self.radius) + (((self.pos[0] + 1) % 2) * cos_rad_30 * self.radius),
-            (self.pos[0] * (self.radius + (sin_rad_30 * self.radius))) + self.radius,
-            self.width, self.height,
-        )
-        self.image = pygame.Surface(self.size)
 
     def draw(self):
         self.image.set_colorkey((50, 50, 50))
@@ -68,8 +54,7 @@ class Hexagon(pygame.sprite.Sprite):
         pygame.draw.polygon(self.image, pygame.Color('white'), points)  # inside
         pygame.draw.polygon(self.image, color, points, 1)  # outside
 
-    def update(self, surface, scale=None):
-        self._scale_size(scale or self.scale)
+    def update(self, surface):
         self.draw()
         surface.blit(self.image, self.rect)
 
@@ -91,7 +76,7 @@ class Display:
         pygame.display.set_caption("Armateur")
 
         self.raw_map = raw_map
-        self.radius = 20
+        self.radius = 5
         self.map_size = self.map_width, self.map_height = (
             len(raw_map) * self.radius * self.cos_rad_30 * 2,
             # (len(raw_map) / 2) * self.radius * 2 + len(raw_map) / 2 * self.sin_rad_30 * self.radius * 2,
@@ -133,10 +118,6 @@ class Display:
         self.layers.draw(self.master_surface)
 
         pygame.display.flip()
-
-    def zoom(self, zoom):
-        for sprite in self.sprites:
-            sprite.update(self.scroll_surface.image, scale=sprite.scale - 0.1)
 
     def mouse_clic(self, event):
         pos_sprite = pygame.sprite.Sprite()
@@ -181,9 +162,8 @@ class Display:
                 self.tiles.add(
                     Hexagon(
                         (
-                            # (j * 2 * self.cos_rad_30 * self.radius) + (((i + 1) % 2) * self.cos_rad_30 * self.radius),
-                            # (i * (self.radius + (self.sin_rad_30 * self.radius))) + self.radius,
-                            i, j,
+                            (j * 2 * self.cos_rad_30 * self.radius) + (((i + 1) % 2) * self.cos_rad_30 * self.radius),
+                            (i * (self.radius + (self.sin_rad_30 * self.radius))) + self.radius,
                         ),
                         self.radius,
                         color=color,
@@ -227,8 +207,9 @@ class Client:
                 elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                     self.display.mouse_clic(event)
 
-                elif event.type == pygame.MOUSEBUTTONUP and event.button == 5:
-                    self.display.zoom(-1)
+                # elif event.type == pygame.MOUSEBUTTONUP and event.button == 5:
+                #     radius -= 1
+                #     hexs = draw_map(raw_map, scroll_offset)
 
             mouse_pos = pygame.mouse.get_pos()
             self.display.mouse_update(mouse_pos)
