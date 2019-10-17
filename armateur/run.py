@@ -13,11 +13,11 @@ sin_rad_30 = math.sin(math.radians(30))
 
 
 def read_map():
-    f = open('France_250_ASC_L93.OCEAN0.S.fdf')
+    # f = open('France_250_ASC_L93.OCEAN0.S.fdf')
+    f = open('test_map.txt')
     raw_map = []
     for line in f:
-        cols = line.split(' ')
-        raw_map.append(cols)
+        raw_map.append(line.split(' '))
 
     return raw_map
 
@@ -76,7 +76,7 @@ class Display:
         pygame.display.set_caption("Armateur")
 
         self.raw_map = raw_map
-        self.radius = 10
+        self.radius = 5
         self.map_size = self.map_width, self.map_height = (
             len(raw_map) * self.radius * self.cos_rad_30 * 2,
             # (len(raw_map) / 2) * self.radius * 2 + len(raw_map) / 2 * self.sin_rad_30 * self.radius * 2,
