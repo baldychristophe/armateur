@@ -76,7 +76,7 @@ class Display:
         pygame.display.set_caption("Armateur")
 
         self.raw_map = raw_map
-        self.radius = 5
+        self.radius = 10
         self.map_size = self.map_width, self.map_height = (
             len(raw_map) * self.radius * self.cos_rad_30 * 2,
             # (len(raw_map) / 2) * self.radius * 2 + len(raw_map) / 2 * self.sin_rad_30 * self.radius * 2,
@@ -207,9 +207,8 @@ class Client:
                 elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                     self.display.mouse_clic(event)
 
-                # elif event.type == pygame.MOUSEBUTTONUP and event.button == 5:
-                #     radius -= 1
-                #     hexs = draw_map(raw_map, scroll_offset)
+                elif event.type == pygame.MOUSEBUTTONUP and event.button == 5:
+                    pass  # dezoom
 
             mouse_pos = pygame.mouse.get_pos()
             self.display.mouse_update(mouse_pos)
@@ -217,16 +216,16 @@ class Client:
             # Update the screen once per frame
             self.display.flip()
 
-            # scroll_margin = 70
-            # if mouse_pos[0] < scroll_margin:
-            #     pygame.event.post(pygame.event.Event(pygame.KEYUP, {'key': pygame.K_LEFT}))
-            # elif mouse_pos[0] > (screen_width - scroll_margin):
-            #     pygame.event.post(pygame.event.Event(pygame.KEYUP, {'key': pygame.K_RIGHT}))
-            #
-            # if mouse_pos[1] < scroll_margin:
-            #     pygame.event.post(pygame.event.Event(pygame.KEYUP, {'key': pygame.K_UP}))
-            # elif mouse_pos[1] > (screen_height - scroll_margin):
-            #     pygame.event.post(pygame.event.Event(pygame.KEYUP, {'key': pygame.K_DOWN}))
+            scroll_margin = 20
+            if mouse_pos[0] < scroll_margin:
+                pygame.event.post(pygame.event.Event(pygame.KEYUP, {'key': pygame.K_LEFT}))
+            elif mouse_pos[0] > (self.display.screen_width - scroll_margin):
+                pygame.event.post(pygame.event.Event(pygame.KEYUP, {'key': pygame.K_RIGHT}))
+
+            if mouse_pos[1] < scroll_margin:
+                pygame.event.post(pygame.event.Event(pygame.KEYUP, {'key': pygame.K_UP}))
+            elif mouse_pos[1] > (self.display.screen_height - scroll_margin):
+                pygame.event.post(pygame.event.Event(pygame.KEYUP, {'key': pygame.K_DOWN}))
 
 
 def main():
