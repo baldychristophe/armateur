@@ -76,7 +76,7 @@ class Display:
         pygame.display.set_caption("Armateur")
 
         self.raw_map = raw_map
-        self.radius = 5
+        self.radius = 30
         self.map_size = self.map_width, self.map_height = (
             len(raw_map) * self.radius * self.cos_rad_30 * 2,
             # (len(raw_map) / 2) * self.radius * 2 + len(raw_map) / 2 * self.sin_rad_30 * self.radius * 2,
@@ -119,19 +119,12 @@ class Display:
         pygame.display.flip()
 
     def mouse_clic(self, event):
-        mouse_pos = event.pos
-
-        line = (mouse_pos[1] - self.view_rect.y - self.radius) / (self.radius + (self.sin_rad_30 * self.radius))
-        col = (mouse_pos[0] - self.view_rect.x + ((line % 2) * self.sin_rad_30 * self.radius) - (
-                    self.radius * self.cos_rad_30)) / (
-                      2 * self.cos_rad_30 * self.radius)
-        clicked_hex = self.sprites[round(255 * round(line) + round(col))]
+        clicked_hex = self.update_hex
         if clicked_hex.color == blue:
             clicked_hex.color = green
         else:
             clicked_hex.color = blue
         clicked_hex.update(self.scroll_surface.image)
-
 
     def scroll(self, dx=0, dy=0):
         if not self.view_rect.x + dx <= 0 or self.view_rect.w - (self.view_rect.x + dx) > self.map_width:
@@ -145,7 +138,7 @@ class Display:
 
     def mouse_update(self, mouse_pos):
         line = (mouse_pos[1] - self.view_rect.y - self.radius) / (self.radius + (self.sin_rad_30 * self.radius))
-        col = (mouse_pos[0] - self.view_rect.x + ((line % 2) * self.sin_rad_30 * self.radius) - (self.radius * self.cos_rad_30)) / (
+        col = (mouse_pos[0] - self.view_rect.x - (line % 2) * self.cos_rad_30 * self.radius) / (
                     2 * self.cos_rad_30 * self.radius)
         highlight_hex = self.sprites[round(255 * round(line) + round(col))]
 
@@ -170,7 +163,7 @@ class Display:
                     Hexagon(
                         (
                             (j * 2 * self.cos_rad_30 * self.radius) + (((i + 1) % 2) * self.cos_rad_30 * self.radius),
-                            (i * (self.radius + (self.sin_rad_30 * self.radius))) + self.radius,
+                            i * (self.radius + (self.sin_rad_30 * self.radius)),
                         ),
                         self.radius,
                         color=color,
