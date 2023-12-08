@@ -51,7 +51,7 @@ class Hexagon(pygame.sprite.Sprite):
             (w - 1, (self.radius * sin_rad_30)),
             (w - 1, h - (self.radius * sin_rad_30)),
         ]
-        pygame.draw.polygon(self.image, pygame.Color('white'), points)  # inside
+        pygame.draw.polygon(self.image, color, points)  # inside
         pygame.draw.polygon(self.image, color, points, 1)  # outside
 
     def update(self, surface):
@@ -76,7 +76,7 @@ class Display:
         pygame.display.set_caption("Armateur")
 
         self.raw_map = raw_map
-        self.radius = 4
+        self.radius = 8
         self.map_size = self.map_width, self.map_height = (
             len(raw_map) * self.radius * self.cos_rad_30 * 2,
             # (len(raw_map) / 2) * self.radius * 2 + len(raw_map) / 2 * self.sin_rad_30 * self.radius * 2,

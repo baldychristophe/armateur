@@ -12,8 +12,11 @@ The display refresh rate is limited to 20 frame per second and the screen is
 updated once per frame.
 
 ## Screenshots
-Example of a map of France made with hexagonal tiles
-![Example map](screenshots/img.png)
+Example of a map of France made with hexagonal tiles filled with white
+![Example map](screenshots/armateur_wide_view.png)
+
+Closer look of the map, with color-filled hexagonal tiles
+![Example map](screenshots/armateur_closer_view.png)
 
 ## Usage
 *Use with python3.8*
